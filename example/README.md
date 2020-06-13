@@ -1,7 +1,7 @@
 # install
 
 ```
-cd /use-redux-agent/src/example
+cd /use-redux-agent/example
 npm install
 ```
 # start
