@@ -1,7 +1,7 @@
-import React, {memo, useMemo} from 'react';
+import React, {memo, useEffect, useMemo} from 'react';
 import {Provider} from 'react-redux';
 import store from './module';
-import {useReduxAgent} from "use-redux-agent";
+import {initialStates, useReduxAgent} from "use-redux-agent";
 import User from "./module/user";
 import {Button, Select} from "antd";
 
@@ -26,7 +26,7 @@ const UserSelect = memo(() => {
     const {current, users} = state;
     return (
         <div style={{marginTop:8}}>
-            <Select style={{width:200}} value={current.id} onChange={switchCurrent}>
+            <Select style={{width:290}} value={current.id} onChange={switchCurrent}>
                 {
                     users.map((user) => (
                         <Option value={user.id} key={user.version.toString()}>{user.name}（version:{user.version}）</Option>
@@ -39,6 +39,9 @@ const UserSelect = memo(() => {
 });
 
 export default () => {
+    useEffect(()=>{
+        initialStates(store);
+    },[]);
     return (
         <Provider store={store}>
             <div style={{padding:12}}>
