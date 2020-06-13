@@ -16,7 +16,7 @@ So, we use [agent-reducer](https://www.npmjs.com/package/agent-reducer) to make 
 ### make useSelector and useDispatch together like a class instance
 Now, let's use redux like this:
 
-more [example]()
+more [example](https://github.com/filefoxper/use-redux-agent/tree/master/example)
 ```typescript jsx
 import React,{useEffect} from 'react';
 import {createStore} from 'redux';
@@ -182,6 +182,8 @@ The property '<strong>namespace</strong>' will be used in createReduxAgentReduce
 1. Do not afraid about using <strong>this.xxx</strong>, when you are using <strong>useReduxAgent(agent:OriginAgent)</strong>.
 The <strong>result useReduxAgent</strong> return is rebuild by proxy and Object.defineProperties, and the functions in it have bind <strong>this</strong> by using sourceFunction.apply(agentProxy,...args),
 so you can use those functions by reassign to any other object, and <strong>this</strong> in the function is locked to the <strong>result useAgent</strong> return.
+
+more [example](https://github.com/filefoxper/use-redux-agent/tree/master/example)
 
 ### api
 ###### useReduxAgent (hook)
