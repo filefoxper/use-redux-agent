@@ -1,6 +1,6 @@
 {
   "name": "use-redux-agent",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./index.js",
   "author": "Jimmy.Harding",
   "description": "the purpose of this project is make use react-redux more easier",
