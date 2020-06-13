@@ -15,6 +15,8 @@ But we want more easier way to write code by using 'useSelector' and 'useDispatc
 So, we use [agent-reducer](https://www.npmjs.com/package/agent-reducer) to make react-redux more easier.
 ### make useSelector and useDispatch together like a class instance
 Now, let's use redux like this:
+
+more [example]()
 ```typescript jsx
 import React,{useEffect} from 'react';
 import {createStore} from 'redux';
