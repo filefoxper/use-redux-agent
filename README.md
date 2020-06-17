@@ -116,13 +116,13 @@ function MyComponent() {
 ```
 The code above gives us a new style to write a <strong>useSelector</strong> and <strong>useDispatch</strong>, 
 and it using <strong>useReduxAgent</strong> to do the job together. 
-The [agent-reducer](https://www.npmjs.com/package/agent-reducer) transform an <strong>agent class or object</strong> to reducer,
+The [agent-reducer](https://www.npmjs.com/package/agent-reducer) transform an <strong>originAgent class or object</strong> to reducer,
 and provide a handler for usage. 
 
 Let's analyze this code. 
 
 The function `changeUser` and `setAddition` returns a next state, like a true reducer when it invoked.
-And also like a dispatch when you deploy it. This writing style let you can set arguments more friendly, and do not need an action style. 
+This writing style let you trigger a dispatch like deploy a normal function, and do not need an action style. 
 The current state can be retrieve from this.state. So, We don't have to write a reducer like this now:
 ```typescript
 ......
@@ -158,28 +158,26 @@ So, we do not support you using combineReducers after you get the reducer create
 </strong>
 
 ### rules
-1 . The class or object be used to replace reducer call <strong>agent</strong> here. To be an <strong>agent</strong>, 
-it must has a <strong>state</strong> property, and do not modify <strong>state</strong> manually. 
-this.state preserve the current state, so you can compute a <strong>next state</strong> by this.state and arguments from an <strong>agent</strong> function.
+1 . The class to `useReduxAgent` function is called <strong> originAgent</strong>. To be an <strong>originAgent</strong>, 
+it must has a <strong>state</strong> property. Do not modify <strong>state</strong> manually. 
+this.state preserve the current state, so you can compute a <strong>next state</strong> by this.state and params in an <strong>originAgent</strong> function.
+
+2 . The object `useReduxAgent(originAgent)` is called <strong>agent</strong>. 
+And the function in your <strong>agent</strong> which returns an object <strong>not</strong> undefined or promise, 
+will be an <strong>dispatch function</strong>, when you deploy it, an action contains next state will be dispatched to a true reducer.  
 ```
-like agent.state
+like agent.changeUser, agent.setAddition
 ```
-2 . The function in your <strong>agent</strong> which returns an object <strong>not</strong> undefined or promise, 
-will be an <strong>dispatch function</strong>, when you deploy, it like dispatch an action to reducer. 
-when this function invoke, it like a branch in a reducer function. 
-```
-like agent.addOne, agent.add
-```
-3 . The function which returns <strong>undefined | promise | void</strong> is just a simple function,
+3 . The function which returns <strong>undefined | promise</strong> is just a simple function,
 which can deploy <strong>dispatch functions</strong> to change state.
 ```
-like agent.addOneAfterOneSecond
+like agent.fetchAddition
 ```
 4 . <strong>Do not use namespace property</strong> in your agent class. 
 The property '<strong>namespace</strong>' will be used in createReduxAgentReducer function.
 
 ### features
-1. Do not afraid about using <strong>this.xxx</strong>, when you are using <strong>useReduxAgent(agent:OriginAgent)</strong>.
+1. Do not worry about using <strong>this.xxx</strong>, when you are using <strong>useReduxAgent(agent:OriginAgent)</strong>.
 The <strong>result useReduxAgent</strong> return is rebuild by proxy and Object.defineProperties, and the functions in it have bind <strong>this</strong> by using sourceFunction.apply(agentProxy,...args),
 so you can use those functions by reassign to any other object, and <strong>this</strong> in the function is locked to the <strong>result useAgent</strong> return.
 
