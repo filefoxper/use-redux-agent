@@ -1,6 +1,6 @@
 {
   "name": "use-redux-agent",
-  "version": "0.0.16",
+  "version": "1.0.8",
   "main": "./index.js",
   "author": "Jimmy.Harding",
   "description": "the purpose of this project is make use react-redux more easier",
@@ -34,12 +34,12 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "agent-reducer": ">=1.0.6"
+    "agent-reducer": ">=1.0.8"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",
-    "agent-reducer": ">=1.0.6",
+    "agent-reducer": ">=1.0.8",
     "redux": ">=4.0.5",
     "react-redux": ">=7.1.3"
   },
