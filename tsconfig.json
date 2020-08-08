@@ -1,17 +1,23 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "jsx": "react",
+    "target": "esnext",
+    "module": "esnext",
     "declaration": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "baseUrl": ".",
     "outDir": ".",
-    "strict": false,
-    "esModuleInterop": true
+    "strict": true,
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
-    "node_modules"
-  ],
-  "include": [
-    "src"
+    "node_modules",
+    "example"
   ]
 }

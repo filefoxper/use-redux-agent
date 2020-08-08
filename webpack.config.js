@@ -1,5 +1,7 @@
 const webpack = require('webpack');
 
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 const pathBuilder = require('path');
@@ -75,6 +77,9 @@ function entry() {
             namedChunks: true
         },
         resolve: {
+            plugins: [
+                new TsconfigPathsPlugin({configFile: "./tsconfig.json"})
+            ],
             extensions: ['.js', '.ts', '.tsx', '.json', 'txt']
         },
         module: {
@@ -99,14 +104,16 @@ function entry() {
                                     [
                                         '@babel/preset-env',
                                         {
-                                            modules: false
+                                            modules: false,
+                                            targets: {
+                                                browsers: ['ie >= 11']
+                                            }
                                         }
-                                    ],
-                                    '@babel/preset-react',
-                                    '@babel/preset-typescript'
+                                    ]
                                 ]
                             }
-                        }
+                        },
+                        "ts-loader"
                     ]
                 }
             ]

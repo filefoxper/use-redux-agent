@@ -21,7 +21,7 @@ interface UserState {
     readonly users: Array<UserDto>
 }
 
-const defaultUser = {id: -1, name: 'GUEST', role: Role.GUEST, version: 0};
+const defaultUser:UserDto = {id: -1, name: 'GUEST', role: Role.GUEST, version: 0};
 
 const getDefaultUserState = () => {
     return {

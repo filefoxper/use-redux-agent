@@ -128,6 +128,11 @@ export const getAgentReducerMapByStore = (store: Store): AgentReducerMapGetter =
 };
 
 export const getAgentByStoreClass = <S, T extends OriginAgent<S>>(store: Store, agentClass: AgentClass<S, T>): T => {
-    return getAgentReducerMapByStore(store).getAgentReducer(agentClass).agent;
+    const reducer = getAgentReducerMapByStore(store).getAgentReducer(agentClass);
+    const agent = reducer.agent;
+    const namespace = agent.namespace;
+    const state = store.getState();
+    reducer.update(namespace ? state[namespace] : state, store.dispatch);
+    return agent;
 };
 

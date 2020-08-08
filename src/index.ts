@@ -1,4 +1,4 @@
-export {createReduxAgentReducer, createReduxAgent, getAgentReducerMapByStore, getAgentByStoreClass} from './libs/redux';
+export {createReduxAgentReducer, createReduxAgent, getAgentByStoreClass} from './libs/redux';
 
 export {initialStates} from './libs/reduxInitial';
 
