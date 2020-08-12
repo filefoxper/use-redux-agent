@@ -8,6 +8,10 @@
 
 # use-redux-agent
 
+### new changes
+1. The arrow function in origin agent will not be supported as an dispatch function from this version. (For this feature has to built by changing property define about the origin agent)
+2. We have made it support IE browsers from version 9. 
+
 ### redux
 We often use redux and react-redux to manage our global states in react app, and it has done this job well so far.
 But we want more easier way to write code by using 'useSelector' and 'useDispatch'.
@@ -175,6 +179,8 @@ like agent.fetchAddition
 ```
 4 . <strong>Do not use namespace property</strong> in your agent class. 
 The property '<strong>namespace</strong>' will be used in createReduxAgentReducer function.
+
+5 . <strong>Do not use arrow function in originAgent</strong>.
 
 ### features
 1. Do not worry about using <strong>this.xxx</strong>, when you are using <strong>useReduxAgent(agent:OriginAgent)</strong>.
