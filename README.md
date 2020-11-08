@@ -9,8 +9,7 @@
 # use-redux-agent
 
 ### new changes
-1. The arrow function in origin agent will not be supported as an dispatch function from this version. (For this feature has to built by changing property define about the origin agent)
-2. We have made it support IE browsers from version 9. 
+1. update with [agent-reducer](https://www.npmjs.com/package/agent-reducer) 
 
 ### redux
 We often use redux and react-redux to manage our global states in react app, and it has done this job well so far.
