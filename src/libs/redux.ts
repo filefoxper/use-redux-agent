@@ -1,4 +1,4 @@
-import {OriginAgent, createAgentReducer, AgentReducer, Action, Reducer} from "agent-reducer";
+import {OriginAgent, createAgentReducer, AgentReducer, Action, Reducer, getAgentNamespaceKey} from "agent-reducer";
 import {
     AgentClass,
     ReduxModule,
@@ -45,7 +45,7 @@ export function createReduxAgentReducer(dxModule: ReduxModule): Reducer<any, Act
     let reducers: Array<AgentReducer> = [];
     for (const [key, ReducerClass] of Object.entries(dxModule)) {
         const dxReducer = new ReducerClass();
-        dxReducer.namespace = key;
+        dxReducer[getAgentNamespaceKey()] = key;
         const reducer = toReducer(dxReducer);
         reducers.push(reducer);
         agentReducerMap.set(ReducerClass, reducer);
@@ -88,7 +88,7 @@ export function createReduxAgent(dxModule: ReduxModule): { reducers: { [key: str
     let reducers: { [key: string]: AgentReducer } = {};
     for (const [key, ReducerClass] of Object.entries(dxModule)) {
         const dxReducer = new ReducerClass();
-        dxReducer.namespace = key;
+        dxReducer[getAgentNamespaceKey()] = key;
         const reducer = toReducer(dxReducer);
         reducers[key] = reducer;
         agentReducerMap.set(ReducerClass, reducer);
@@ -130,7 +130,7 @@ export const getAgentReducerMapByStore = (store: Store): AgentReducerMapGetter =
 export const getAgentByStoreClass = <S, T extends OriginAgent<S>>(store: Store, agentClass: AgentClass<S, T>): T => {
     const reducer = getAgentReducerMapByStore(store).getAgentReducer(agentClass);
     const agent = reducer.agent;
-    const namespace = agent.namespace;
+    const namespace = agent[getAgentNamespaceKey()];
     const state = store.getState();
     reducer.update(namespace ? state[namespace] : state, store.dispatch);
     return agent;

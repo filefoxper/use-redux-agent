@@ -8,9 +8,6 @@
 
 # use-redux-agent
 
-### new changes
-1. update with [agent-reducer](https://www.npmjs.com/package/agent-reducer) 
-
 ### redux
 We often use redux and react-redux to manage our global states in react app, and it has done this job well so far.
 But we want more easier way to write code by using 'useSelector' and 'useDispatch'.

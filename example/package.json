@@ -21,10 +21,11 @@
     "moment": "^2.24.0",
     "classnames": "^2.2.6",
     "babel-polyfill": "^6.26.0",
-    "use-agent-reducer": "0.1.8",
+    "agent-reducer": "^2.0.1",
+    "use-agent-reducer": "2.0.1",
     "redux": "^4.0.5",
     "react-redux": "^7.2.0",
-    "use-redux-agent": "1.0.8"
+    "use-redux-agent": "2.0.0"
   },
   "devDependencies": {
     "@babel/core": "7.2.2",
