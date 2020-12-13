@@ -21,7 +21,7 @@
     "moment": "^2.24.0",
     "classnames": "^2.2.6",
     "babel-polyfill": "^6.26.0",
-    "agent-reducer": "^2.0.1",
+    "agent-reducer": "^3.0.0",
     "use-agent-reducer": "2.0.1",
     "redux": "^4.0.5",
     "react-redux": "^7.2.0",

@@ -1,5 +1,4 @@
-import {LifecycleMiddleWares, middleWare, OriginAgent} from "agent-reducer";
-import {doc} from "prettier";
+import {LifecycleMiddleWares, middleWare, MiddleWarePresets, OriginAgent} from "agent-reducer";
 import {fetchUsers} from "../service";
 
 enum Role {
@@ -46,10 +45,10 @@ export default class User implements OriginAgent<UserState> {
         return {current: nextCurrent, users: nextUsers};
     }
 
-    @middleWare(LifecycleMiddleWares.takeLazy(500))
+    @middleWare(MiddleWarePresets.takeLazy(500))
     async fetchUsers() {
         const users = await fetchUsers();
-        this.handleUsersChange(users);
+        return this.handleUsersChange(users);
     };
 
     switchCurrent(id?: number) {
