@@ -9,315 +9,237 @@
 # use-redux-agent
 
 ### redux
-We often use redux and react-redux to manage our global states in react app, and it has done this job well so far.
-But we want more easier way to write code by using 'useSelector' and 'useDispatch'.
 
-So, we use [agent-reducer](https://www.npmjs.com/package/agent-reducer) to make react-redux more easier.
-### make useSelector and useDispatch together like a class instance
-Now, let's use redux like this:
+作为一个状态管理工具，redux非常的优异，在全局数据管理方面尤为突出。而redux使用的数据处理机制 reducer 更是让热衷于函数式编程的程序员爱不释手，
+甚至连 react 官方也推出了 useReducer 作为非全局数据管理的替代品。但 reducer 也有一些小缺点，比如需要通过 dispatch 事件分发来管理状态。
+这里我们使用 agent-reducer 语法糖，让 reducer 的使用更接近于对象方法调用，更加自然方便。
 
-more [example](https://github.com/filefoxper/use-redux-agent/tree/master/example)
-```typescript jsx
-import React,{useEffect} from 'react';
-import {createStore} from 'redux';
-import {Provider} from 'react-redux';
-import {OriginAgent} from 'agent-reducer';
-import {createReduxAgentReducer,useReduxAgent,getAgentByStoreClass} from "use-redux-agent";
-import {fetchUser,fetchAddition} from './userService';
+关于 [agent-reducer](https://www.npmjs.com/package/agent-reducer) 。
+### 换种写法
+```typescript
+import {OriginAgent} from "agent-reducer";
 
-enum Role{
-    GUEST=0,
-    USER=1,
-    MASTER=2,
-    ADMIN=3
-}
-
-interface UserAddition{
-    userId:number,
-    lastLoginTime:Date,
-    expiredDate:Date
-}
-
-interface UserState {
-  id?:number,
-  name:string,
-  role:Role,
-  addition?:UserAddition
-}
-
-class User implements OriginAgent<UserState> {
-
-    state = {id:undefined,name:'GUEST',role:Role.GUEST,addition:undefined};
-
-    public changeUser(user:UserState) {
-        return user;
+    interface Action {
+        type?: 'stepUp' | 'stepDown' | 'step' | 'sum',
+        payload?: number[] | boolean
     }
-    
-    public setAddition(addition:UserAddition) {
-        if(addition.userId === this.state.id){
-            return {...this.state,addition}
+
+    /**
+     * 经典reducer
+     * @param state
+     * @param action
+     */
+    const countReducer = (state: number = 0, action: Action = {}): number => {
+        switch (action.type) {
+            case "stepDown":
+                return state - 1;
+            case "stepUp":
+                return state + 1;
+            case "step":
+                return state + (action.payload ? 1 : -1);
+            case "sum":
+                return state + (Array.isArray(action.payload) ?
+                    action.payload : []).reduce((r, c): number => r + c, 0);
+            default:
+                return state;
         }
-        return this.state;
     }
 
-    public async fetchUser(id:number) {
-        const user = await fetchUser(id);
-        this.changeUser(user);
+    /**
+     * class写法
+     */
+    class CountAgent implements OriginAgent<number> {
+
+        state = 0;
+        
+        stepUp = (): number => this.state + 1;
+
+        stepDown = (): number => this.state - 1;
+
+        step = (isUp: boolean) => isUp ? this.stepUp() : this.stepDown();
+
+        sum = (...counts: number[]): number => {
+            return this.state + counts.reduce((r, c): number => r + c, 0);
+        };
+
     }
-    
-    public async fetchAddition(userId:number){
-        const user = await fetchAddition(userId);
-        this.setAddition(user);
+```
+以上代码是一段简单的计数器，`CountAgent`通过调用对象属性方法的形式来完成一个`reducer action`分支，
+`return`值作为计算完后的`this.state`数据（这里并未涉及state维护器，所以先当作有这么一个黑盒工具）。
+有点像reducer，但省去了action的复杂结构（action为了兼容多个分支的不同需求所以很难以普通传参方式来工作）。
+
+### 用在 redux 上
+
+module 业务数据模型：module/count.ts
+
+```typescript
+import {middleWare,MiddleWarePresets, OriginAgent} from "agent-reducer";
+
+class CountAgent implements OriginAgent<number> {
+
+    // 全局统一初始化数据方法，在调用 use-agent-redux 提供的 initialStates 方法时被统一调用，
+    // 并把 resolve 或 return 非promise 的数据 dispatch 到 store中相应的 state 中
+    static initialState(){
+        return Promise.resolve(1);
     }
 
-}
+    // 初始化的state数据，根据redux要求不能为 undefined
+    state = 0;
+        
+    // 方法调用后的返回值被 dispatch 到 store相应的 state 中，并成为当前的 this.state
+    stepUp = (): number => this.state + 1;
 
-const reducer = createReduxAgentReducer({User});
+    stepDown = (): number => this.state - 1;
 
-const store = createStore(reducer,reducer.enhancer);
+    step = (isUp: boolean) => isUp ? this.stepUp() : this.stepDown();
 
-function App() {
-    
-    useEffect(()=>{
-        const agent=getAgentByStoreClass(store,User);
-        agent.fetchUser();
-    },[]);
-    
-  return (
-      <Provider store={store}>
-        <MyComponent/>
-      </Provider>
-  );
-}
+    sum(...counts: number[]): number {
+        return this.state + counts.reduce((r, c): number => r + c, 0);
+    };
 
-function MyComponent() {
-    
-  const {state,fetchAddition} = useReduxAgent(User);
-  
-  const {addition}=state;
-  
-  return (
-      <div>
-        <div>
-            <span>{state.name}</span>
-            <span>（{state.role}）</span>
-            <button onClick={fetchAddition}>fetchAddition</button>
-        </div>
-        {addition?(
-            <div>
-                <span>{addition.lastLoginTime.toDateString()}</span>
-                <span>{addition.expiredDate.toDateString()}</span>
-            </div>
-            ):null
-        }
-      </div>
-  );
+    // 返回对象为 promise ，如果没有使用 agent-reducer 的 MiddleWare，
+    // this.state 将变成一个 promise 对象。
+    // 这里使用了 MiddleWarePresets.takePromiseResolve() 将 promise resolve 的数据dispatch出去，
+    // 并成为 this.state
+    @middleWare(MiddleWarePresets.takePromiseResolve())
+    async requestAndSum(){
+        const remote=await Promise.resolve(3);
+        return this.sum(remote); 
+    }   
+
 }
 ```
-The code above gives us a new style to write a <strong>useSelector</strong> and <strong>useDispatch</strong>, 
-and it using <strong>useReduxAgent</strong> to do the job together. 
-The [agent-reducer](https://www.npmjs.com/package/agent-reducer) transform an <strong>originAgent class or object</strong> to reducer,
-and provide a handler for usage. 
+关于 agent-reducer 模型及 MiddleWares 的使用，可以参考： [agent-reducer](https://www.npmjs.com/package/agent-reducer) 。
 
-Let's analyze this code. 
+root 创建 store，并将模型reducer化 module/index.ts
 
-The function `changeUser` and `setAddition` returns a next state, like a true reducer when it invoked.
-This writing style let you trigger a dispatch like deploy a normal function, and do not need an action style. 
-The current state can be retrieve from this.state. So, We don't have to write a reducer like this now:
 ```typescript
-......
-const user=(state:User,action:Action)=>{
-    if(action.type === 'changeUser'){
-        const {payload}=action;
-        return payload;
-    }
-    if(action.type === 'setAddition'){
-        const {payload}=action;
-        if(payload.userId===state.id){
-            return {...state,addition:payload};
-        }else{
-            return state;
-        }
-    }
-    return state;
+import {createStore} from "redux";
+import count from './count';
+import {createReduxAgentReducer} from "use-redux-agent";
+
+const modules={
+    count
 };
 
-function asyncFetchUser(id:number){
-    fetchUser(id).then((user)=>dispatch({type:'changeUser',payload:user}));
+// 将modules打包成一个reducer方法
+const reducer = createReduxAgentReducer(modules);
+
+// 使用 redux 的 createStore 和绑定好的 reducer 创建 store，
+// reducer.enhancer 是必要的，用来组建 store 和 agent 的关系
+const store = createStore(reducer, reducer.enhancer);
+
+export default store;
+```
+
+total layout 将store加入react-redux的Provider layout.tsx
+ 
+```tsx
+
+import React, {useEffect} from 'react';
+import {Provider} from 'react-redux';
+import store from './module';
+import {initialStates} from "use-redux-agent";
+import Apply from './apply.tsx'
+
+export default () => {
+    useEffect(()=>{
+        // 初始化所有具备 static
+        initialStates(store);
+    },[]);
+    return (
+        <Provider store={store}>
+            <Apply/>
+        </Provider>
+    );
 }
-......
 ```
-If you are using typescript, the type system will give you more infos to keep your code reliable.
-There are some rules for using this tool better, and trust me, they are simple enough.
-### declare
-<strong>
-We do not think combine reducers with a deep structrue can bring you any goods. 
-So, we do not support you using combineReducers after you get the reducer create from createReduxAgentReducer,
- if you do this, your agent and modules can not be found. And that will cause useReduxAgent function work fail.
- So, keep your modules flatten. 
-</strong>
 
-### rules
-1 . The class to `useReduxAgent` function is called <strong> originAgent</strong>. To be an <strong>originAgent</strong>, 
-it must has a <strong>state</strong> property. Do not modify <strong>state</strong> manually. 
-this.state preserve the current state, so you can compute a <strong>next state</strong> by this.state and params in an <strong>originAgent</strong> function.
+apply 应用，监听数据变化触发渲染（组件中获取最新数据）、dispatch action apply.tsx
 
-2 . The object `useReduxAgent(originAgent)` is called <strong>agent</strong>. 
-And the function in your <strong>agent</strong> which returns an object <strong>not</strong> undefined or promise, 
-will be an <strong>dispatch function</strong>, when you deploy it, an action contains next state will be dispatched to a true reducer.  
-```
-like agent.changeUser, agent.setAddition
-```
-3 . The function which returns <strong>undefined | promise</strong> is just a simple function,
-which can deploy <strong>dispatch functions</strong> to change state.
-```
-like agent.fetchAddition
-```
-4 . <strong>Do not use namespace property</strong> in your agent class. 
-The property '<strong>namespace</strong>' will be used in createReduxAgentReducer function.
+```tsx
+import React ,{useEffect}from 'react'; 
+import Count from './module/count.ts'
+import {useReduxAgent} from "use-redux-agent";
 
-5 . <strong>Do not use arrow function in originAgent</strong>.
+export default ()=>{
+    // useReduxAgent 直接传入 Module 的 class 模型就可以取到 agent 了
+    // agent 的 state 就是 store 中对应当前模型的 state，所有方法调用都有自动dispatch action功能
+    const {state,stepUp,stepDown,requestAndSum}=useReduxAgent(Count);
 
-### features
-1. Do not worry about using <strong>this.xxx</strong>, when you are using <strong>useReduxAgent(agent:OriginAgent)</strong>.
-The <strong>result useReduxAgent</strong> return is rebuild by proxy and Object.defineProperties, and the functions in it have bind <strong>this</strong> by using sourceFunction.apply(agentProxy,...args),
-so you can use those functions by reassign to any other object, and <strong>this</strong> in the function is locked to the <strong>result useAgent</strong> return.
+    useEffect(()=>{
+        requestAndSum();
+    },[]);
 
-more [example](https://github.com/filefoxper/use-redux-agent/tree/master/example)
-
-### api
-###### useReduxAgent (hook)
-This hook function is used to build an connect with redux, when the state of your Agent class module changes, it invokes.
-
-Give it an Agent class as param, you will receive an connected agent.
-
-Give it the optional param, you can judge if the component should render by state change.
-
-The second param stateChangeComparator is a function with param state, and you should return an array,
-if any element of array is changed between prev state and current state mapped, it will drive your component render.
-```typescript
-/**
-* 
-* @param agentClass                 for select the agent
-* @param stateChangeComparator      judge if then state change should render your component    
-* 
-* @return agent which you will use to deploy, state for render, and functions for dispatch or effect
-*/
-declare function useReduxAgent<S = any, T extends OriginAgent<S> = OriginAgent<S>>(agentClass: AgentClass<S, T>, stateChangeComparator?: (state: S) => Array<any>): T
-
-/**
-* the agent plays like a classify reducer, which must has a state. Be careful about namespace
-*/
-interface OriginAgent<S = any> {
-  state: S,
-  namespace?: string
+    return (
+        <div>
+            <button onClick={stepUp}>stepUp</button>
+            <span>{state}</span>
+            <button onClick={stepDown}>stepDown</button>
+        </div>
+    );
 }
-
-export type AgentClass<S = any, T extends OriginAgent<S> = OriginAgent<S>> = {
-  new(): T,
-  initialState?: () => Promise<S>
-}
-
-/****** sample ******/
-import {User} from 'module';
-......
-const {state,addAddition,fetchUser}=useReduxAgent(User);
-......
 ```
-###### createReduxAgentReducer (function)
-This function is used to build a reducer which combined by your module object.
 
-Give it a module object as param, you can receive a reducer with enhancer (createStore enhancer) for it's property.
-```typescript
-/**
-* 
-* @param dxModule   It is an object whose values are Agent classes
-* 
-* @return reducer   It is a reducer function, which is combined from a module object, and it has a enhancer property which value should add to your createStore.  
-*/
-declare function createReduxAgentReducer(dxModule: ReduxModule): Reducer<any, Action> & { enhancer: Enhancer }
+为什么不用`namespace`，因为 use-redux-agent 认为 class 直接代表了模型，
+只要取到模型就应该可以拿到相关数据，并可以直接操作才对，所以与普世的redux作风有所不同。
 
-/**
-* It is an object whose values are Agent classes
-*/
-interface ReduxModule {
-  [key: string]: { new(): OriginAgent }
-}
+ [agent-reducer](https://www.npmjs.com/package/agent-reducer) 是 use-redux-agent 的基础。
+ 要想更容易的使用 use-redux-agent ，建议可以参考 agent-reducer 文档。关于 MiddleActions 的使用，建议可以引入
+ [use-agent-reducer](https://www.npmjs.com/package/use-agent-reducer) 的 `useMiddleActions` 功能。
+ 
+ ### API
+ 
+ 1 . createReduxAgentReducer
+ 
+ 创建一个 reducer 方法，该 reducer 带有一个 redux 标准的 enhancer 用于组合 store, reducer, agent 之间的关系。
+ 
+ 入参：modules object，一个由一个或多个 module class 组成的 object 模型。
+ 每个 module class 是一个`origin-agent`( agent-reducer 定义 )，这个 class 的 state 来自redux存储的模型数据，
+ class 实例方法调用相当于 dispatch action，而 static 方法 initialState，可以通过`API`的另一个方法`initialStates(store)`统一调用。
+ 
+ 返回：reducer方法，方法reducer.enhancer是一个标准的redux createStore enhancer。
+ 
+ 返回后使用方式：
+ ```typescript
+ import {createStore} from "redux";
+ import module from './module';
+ import {createReduxAgentReducer} from "use-redux-agent";
+ 
+ const modules={
+     module
+ };
+ 
+ // 将modules打包成一个reducer方法
+ const reducer = createReduxAgentReducer(modules);
+ 
+ // 使用 redux 的 createStore 和绑定好的 reducer 创建 store，
+ // reducer.enhancer 是必要的，用来组建 store 和 agent 的关系
+ const store = createStore(reducer, reducer.enhancer);
+ 
+ export default store;
+ ```
 
-/**
-* use enhancer when you createStore
-*/
-type Enhancer=(createStore: StoreCreator) => (reducer: Reducer<any, any>, preloadedState: any) => any;
+ 2 . initialStates
 
-/**
-* the agent plays like a classify reducer, which must has a state. Be careful about namespace
-*/
-interface OriginAgent<S = any> {
-  state: S,
-  namespace?: string
-}
+ 统一初始化modules state 数据的方法，所有带有 static initialState 方法的 module class 都可以被统一初始化，
+ static 方法 initialState 放回的如果是个 promise 对象，则会使用 promise resolve 数据作为初始的 this.state，
+ 如果返回普通对象，该对象及为初始化完成后的 this.state。
+ 
+ 入参：redux的store
+ 
+ 返回：promise，初始化是否全部结束，可以通过返回的promise resolve获知。
+ 
+ 3 . useReduxAgent
+ 
+ 通过 module class 获取对应的agent，当store对应class的module数据更新时，会触发agent同步(从而导致组件自动render)，
+ agent还可以通过调用方法来完成 dispatch 的事情。
+ 
+ 入参：module class
+ 
+ 返回：module class对应的agent
+ 
+ [可参考例子](https://github.com/filefoxper/use-redux-agent/tree/master/example)
+ 
+ 
 
-/****** sample ******/
-export class User implements OriginAgent<UserState> {
-
-    state = {id:undefined,name:'GUEST',role:Role.GUEST,addition:undefined};
-
-    public changeUser(user:UserState) {
-        return user;
-    }
-    
-    public setAddition(addition:UserAddition) {
-        if(addition.userId === this.state.id){
-            return {...this.state,addition}
-        }
-        return this.state;
-    }
-
-    public async fetchUser(id:number) {
-        const user = await fetchUser(id);
-        this.changeUser(user);
-    }
-
-}
-
-const module = {User};
-const reducer = createReduxAgentReducer(module);
-const store = createStore(reducer,reducer.enhancer);
-......
-```
-###### getAgentByStoreClass (function)
-When you want to have an agent from your module, you could use getAgentByStoreClass function too.
-
-Give a redux store object and the agent class, you can retrieve your agent.
-
-<div style="color:red">
-It is very different with <strong>useReduxAgent</strong>, this function just give out the agent it found,
-but do not build connection with store, so it is often used in your simple function, not in a react component. 
-</div>
-
-```typescript
-/**
-* 
-* @param store          a redux store which is created by using createReduxAgentReducer
-* @param agentClass     an agent class which you want to be as your module
-* 
-* @return agent         an agent as your module
-*/
-declare function getAgentByStoreClass<S, T extends OriginAgent<S>>(store: Store, agentClass: AgentClass<S, T>): T
-```
-###### initialStates (function)
-This function can be used when you want to initial your state of your agent class modules together.
-When your deploy it, and give a a redux store which is created by using createReduxAgentReducer, 
-it will deploy the <strong>static initialState</strong> function in your agent class if <strong>static initialState</strong> exist,
-and wait for all of those initialState functions are resolved. 
-```typescript
-/**
-* 
-* @param store          a redux store which is created by using createReduxAgentReducer
-* 
-* @return Promise<void>
-*/
-declare function initialStates(store: Store):Promise<void>
-```
-# summary
-If you like it, please give me a little star here. ([github home](https://github.com/filefoxper/use-redux-agent))
