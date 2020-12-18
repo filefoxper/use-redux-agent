@@ -106,7 +106,7 @@ function entry() {
                                         {
                                             modules: false,
                                             targets: {
-                                                browsers: ['ie >= 11']
+                                                browsers: ['ie >= 9']
                                             },
                                             useBuiltIns: "usage",
                                             corejs: {version: 3, proposals: true}

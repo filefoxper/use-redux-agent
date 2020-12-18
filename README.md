@@ -6,6 +6,12 @@
 [standard-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square
 [standard-url]: http://npm.im/standard
 
+### 注意
+
+当前版本响应`agent-reducer@3.1.0+`版本的号召，支持`agent-reducer@1.*`特性及写法，
+只需要对老版本`modules`使用 [legacy](#legacy) 方法即可。
+`use-redux-agent`不受`agent-reducer`全局环境设置 (`globalConfig`)`env.legacy` 影响。
+
 # use-redux-agent
 
 ### redux
@@ -69,6 +75,8 @@ import {OriginAgent} from "agent-reducer";
 有点像reducer，但省去了action的复杂结构（action为了兼容多个分支的不同需求所以很难以普通传参方式来工作）。
 
 ### 用在 redux 上
+
+[可参考例子](https://github.com/filefoxper/use-redux-agent/tree/master/example)
 
 module 业务数据模型：module/count.ts
 
@@ -239,7 +247,54 @@ export default ()=>{
  
  返回：module class对应的agent
  
+ 4 . <span id="legacy">legacy ( >=3.1.0 )</span>
+ 
+ 将 modules 设置成支持`agent-reducer@1.*`版本的 modules。
+ 
+ 入参：modules - { [key:string] : module class }
+ 
+ 返回：带有老版本支持标记的 modules - { [key:string] : module class [static useLegacy=true] }
+ 
+ 当然在每个想要支持`agent-reducer@1.*`版本的 module class 上加上 static useLegacy=true 也是一样的效果
+ ```ts
+    import {OriginAgent} from "agent-reducer";
+
+    class User implements OriginAgent<any>{
+
+        static useLegacy=true;
+        
+        state={};
+
+    }   
+ ```
+或
+```typescript
+import {legacy,createReduxAgentReducer} from "use-redux-agent";
+import UserModule from './user';
+import RolesModule from './roles';
+import {createStore} from "redux";
+
+// 使用 legacy 方法将需要使用 agent-reducer@1.* 特性的 module classes 标记为 static 
+const legacyModules = legacy({
+    user:UserModule
+});
+
+const  modules={
+    ...legacyModules,
+    roles:RolesModule
+}
+
+// 将modules打包成一个reducer方法
+const reducer = createReduxAgentReducer(modules);
+
+// 使用 redux 的 createStore 和绑定好的 reducer 创建 store，
+// reducer.enhancer 是必要的，用来组建 store 和 agent 的关系
+const store = createStore(reducer, reducer.enhancer);
+
+export default store;
+```
+ 
  [可参考例子](https://github.com/filefoxper/use-redux-agent/tree/master/example)
  
- 
+ [change logs](https://github.com/filefoxper/use-redux-agent/tree/master/CHANGE_LOG.md)
 
