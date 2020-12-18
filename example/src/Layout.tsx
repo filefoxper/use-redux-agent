@@ -4,6 +4,7 @@ import store from './module';
 import {initialStates, useReduxAgent} from "use-redux-agent";
 import User from "./module/user";
 import {Button, Select} from "antd";
+import CountLegacy from "@/module/countLegacy";
 
 const Option = Select.Option;
 
@@ -38,6 +39,22 @@ const UserSelect = memo(() => {
     );
 });
 
+const Counter=memo(()=>{
+    const {state,stepUp,remoteStepUp}=useReduxAgent(CountLegacy);
+    return (
+        <div>
+            <div>
+                <button onClick={stepUp}>normal add</button>
+                <span>{state}</span>
+            </div>
+            <div>
+                <button onClick={remoteStepUp}>remote add</button>
+                <span>{state}</span>
+            </div>
+        </div>
+    );
+});
+
 export default () => {
     useEffect(()=>{
         initialStates(store);
@@ -47,6 +64,7 @@ export default () => {
             <div style={{padding:12}}>
                 <CurrentUser/>
                 <UserSelect/>
+                <Counter/>
             </div>
         </Provider>
     );

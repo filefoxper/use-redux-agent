@@ -1,8 +1,18 @@
 import {createStore} from "redux";
 import User from './user';
-import {createReduxAgentReducer} from "use-redux-agent";
+import {createReduxAgentReducer, legacy} from "use-redux-agent";
+import CountLegacy from "@/module/countLegacy";
 
-const reducer = createReduxAgentReducer({User});
+const legacyModules=legacy({
+    count:CountLegacy
+});
+
+const modules={
+    ...legacyModules,
+    User
+}
+
+const reducer = createReduxAgentReducer(modules);
 
 const store = createStore(reducer, reducer.enhancer);
 

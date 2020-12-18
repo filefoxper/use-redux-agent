@@ -37,8 +37,8 @@ export function createReduxAgentReducer(dxModule: ReduxModule): Reducer<any, Act
         }
     }
 
-    function toReducer(dxReducer: OriginAgent,useLegacy?:boolean): AgentReducer {
-        return createAgentReducer(dxReducer, {expired: true, updateBy: 'manual',legacy:!!useLegacy});
+    function toReducer(dxReducer: OriginAgent, useLegacy?: boolean): AgentReducer {
+        return createAgentReducer(dxReducer, {expired: true, updateBy: 'manual', legacy: !!useLegacy});
     }
 
     let agentReducerMap: AgentReducerMap = new Map();
@@ -46,7 +46,7 @@ export function createReduxAgentReducer(dxModule: ReduxModule): Reducer<any, Act
     for (const [key, ReducerClass] of Object.entries(dxModule)) {
         const dxReducer = new ReducerClass();
         dxReducer[getAgentNamespaceKey()] = key;
-        const reducer = toReducer(dxReducer,(ReducerClass as { new(): OriginAgent }&{useLegacy?:boolean}).useLegacy);
+        const reducer = toReducer(dxReducer, (ReducerClass as { new(): OriginAgent } & { useLegacy?: boolean }).useLegacy);
         reducers.push(reducer);
         agentReducerMap.set(ReducerClass, reducer);
     }
@@ -80,8 +80,8 @@ export function createReduxAgentReducer(dxModule: ReduxModule): Reducer<any, Act
 
 export function createReduxAgent(dxModule: ReduxModule): { reducers: { [key: string]: AgentReducer }, enhancer: Enhancer } {
 
-    function toReducer(dxReducer: OriginAgent,useLegacy?:boolean): AgentReducer {
-        return createAgentReducer(dxReducer, {expired: true, updateBy: 'manual',legacy:!!useLegacy});
+    function toReducer(dxReducer: OriginAgent, useLegacy?: boolean): AgentReducer {
+        return createAgentReducer(dxReducer, {expired: true, updateBy: 'manual', legacy: !!useLegacy});
     }
 
     let agentReducerMap: AgentReducerMap = new Map();
@@ -89,7 +89,7 @@ export function createReduxAgent(dxModule: ReduxModule): { reducers: { [key: str
     for (const [key, ReducerClass] of Object.entries(dxModule)) {
         const dxReducer = new ReducerClass();
         dxReducer[getAgentNamespaceKey()] = key;
-        const reducer = toReducer(dxReducer,(ReducerClass as { new(): OriginAgent }&{useLegacy?:boolean}).useLegacy);
+        const reducer = toReducer(dxReducer, (ReducerClass as { new(): OriginAgent } & { useLegacy?: boolean }).useLegacy);
         reducers[key] = reducer;
         agentReducerMap.set(ReducerClass, reducer);
     }
@@ -136,12 +136,11 @@ export const getAgentByStoreClass = <S, T extends OriginAgent<S>>(store: Store, 
     return agent;
 };
 
-export const legacy=(module:ReduxModule)=>{
-    const entries=Object.entries(module);
-    const newEntries=entries.map(([key,value])=>{
-        const copyValue=Object.create(Object.getPrototypeOf(value),Object.getOwnPropertyDescriptors(value));
-        return [key,Object.assign(copyValue,{useLegacy:true})];
-    });
-    return Object.fromEntries(newEntries);
+export const legacy = (module: ReduxModule) => {
+    const values = Object.values(module);
+    values.forEach((value) => {
+        (value as { new(): OriginAgent } & { useLegacy?: boolean }).useLegacy = true;
+    })
+    return module;
 }
 
